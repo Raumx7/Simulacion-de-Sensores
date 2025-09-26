@@ -1,8 +1,21 @@
 # Proyecto: Simulación de Sensores
-Escribe aquí un overview general de tu proyecto
+Este proyecto simula un sistema de medición con sensores de temperatura y humedad. Los datos se cargan desde un archivo CSV y el programa permite:
+
+Visualizar gráficas por hora y gráficas con valores ordenados.
+Analizar valores mínimos y máximos registrados.
+Realizar búsquedas de valores específicos de temperatura en función de la hora.
+
+El objetivo es demostrar el uso de estructuras de datos en C++ junto con algoritmos eficientes de ordenamiento y búsqueda, fundamentales en la gestión de información de sensores en tiempo real.
 
 ## Descripción del avance 1
-Escribe aquí la descripción de lo que contiene este avance
+En este avance se implementó:
+
+Lectura de datos desde un archivo CSV con registros de sensores.
+Representación gráfica de los datos con la librería matplotlibcpp.
+Ordenamiento de datos (temperatura y humedad) para análisis de mínimos y máximos.
+Búsqueda eficiente de temperaturas en un horario específico usando std::binary_search.
+
+Este avance muestra cómo la correcta selección de algoritmos mejora el desempeño en programas que requieren procesar datos de sensores de forma rápida y confiable.
 
 ## Instrucciones para compilar el avance de proyecto
 Ejecuta el siguiente comando en la terminal:
@@ -15,7 +28,17 @@ Ejecuta el siguiente comando en la terminal:
 `./primer_avance` 
 
 ## Descripción de las entradas del avance de proyecto
-Escribe aquí la descripción de las entradas del proyecto, por ejemplo, si de entrada se requieren varios archivos, hay que indicar el formato de cada uno de ellos, y proporcionar un ejemplo de los datos de cada archivo.
+Archivo de entrada: datos.csv que contiene los registros de cada sensor con el siguiente formato:
+
+timestamp,temperatura,humedad
+2024-09-01 08:00:00,25.3,60.1
+2024-09-01 09:00:00,26.7,58.4
+2024-09-01 10:00:00,27.5,57.9
+...
+
+timestamp: fecha y hora (AAAA-MM-DD HH:MM:SS).
+temperatura: valor en °C.
+humedad: valor en %.
 
 ## Descripción de las salidas del avance de proyecto
 Escribe aquí la descripción de los resultados de la ejecución de tu programa.

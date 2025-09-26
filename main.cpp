@@ -2,72 +2,11 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <random>
 #include <algorithm>
-#include <memory>
-#include <chrono>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
 #include "matplotlibcpp.h"
 
 namespace plt = matplotlibcpp;
 
-// ===== Clase abstracta Sensor =====
-class Sensor {
-protected:
-    std::string id;
-public:
-    Sensor(const std::string& id) : id(id) {}
-    virtual ~Sensor() {}
-    virtual double leer() = 0;
-    std::string getId() const { return id; }
-};
-
-// ===== Sensor de Temperatura =====
-class SensorTemperatura : public Sensor {
-public:
-    SensorTemperatura(const std::string& id) : Sensor(id) {}
-    double leer() override {
-        static std::default_random_engine gen(std::random_device{}());
-        std::uniform_real_distribution<double> dist(18.0, 30.0);
-        return dist(gen);
-    }
-};
-
-// ===== Sensor de Humedad =====
-class SensorHumedad : public Sensor {
-public:
-    SensorHumedad(const std::string& id) : Sensor(id) {}
-    double leer() override {
-        static std::default_random_engine gen(std::random_device{}());
-        std::uniform_real_distribution<double> dist(30.0, 80.0);
-        return dist(gen);
-    }
-};
-
-// ===== Formatear timestamp como string =====
-std::string formatTime(const std::chrono::system_clock::time_point& tp) {
-    std::time_t t = std::chrono::system_clock::to_time_t(tp);
-    char buffer[100];
-    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::localtime(&t));
-    return std::string(buffer);
-}
-
-// ===== Guardar CSV con fecha =====
-void guardarCSV(const std::string& nombreArchivo,
-                const std::vector<double>& temps,
-                const std::vector<double>& hums,
-                const std::vector<std::string>& fechas) {
-    std::ofstream file(nombreArchivo);
-    file << "Lectura,Fecha,Temperatura,Humedad\n";
-    for (size_t i = 0; i < temps.size(); i++) {
-        file << i+1 << "," << fechas[i] << "," << temps[i] << "," << hums[i] << "\n";
-    }
-    file.close();
-}
-
-// ===== Leer CSV =====
 bool leerCSV(const std::string& nombreArchivo,
              std::vector<double>& temps,
              std::vector<double>& hums,
@@ -76,7 +15,7 @@ bool leerCSV(const std::string& nombreArchivo,
     if (!file.is_open()) return false;
 
     std::string line;
-    std::getline(file, line); // saltar encabezado
+    std::getline(file, line); // encabezado
 
     while (std::getline(file, line)) {
         size_t pos1 = line.find(',');
@@ -91,86 +30,122 @@ bool leerCSV(const std::string& nombreArchivo,
     return true;
 }
 
-// ===== Graficar datos =====
-void graficar(const std::vector<double>& temps,
-              const std::vector<double>& hums,
-              const std::vector<std::string>& fechas) {
-
+void graficarPorHora(const std::vector<double>& temps,
+                     const std::vector<double>& hums,
+                     const std::vector<std::string>& fechas) {
     std::vector<int> x(temps.size());
     for (size_t i = 0; i < x.size(); i++) x[i] = i+1;
 
+    std::vector<std::string> horas;
+    for (const auto& f : fechas) {
+        horas.push_back(f.substr(11,5));
+    }
+
+    std::vector<int> xticks;
+    std::vector<std::string> xtick_labels;
+    int step = std::max(1, (int)horas.size() / 8);
+    for (size_t i = 0; i < horas.size(); i += step) {
+        xticks.push_back(i+1);
+        xtick_labels.push_back(horas[i]);
+    }
+
     plt::figure();
     plt::subplot(2,1,1);
-    plt::title("Temperatura (°C)");
-    plt::plot(x, temps, "r-");
+    plt::title("Temperatura por hora (°C)");
+    plt::plot(x, temps, "r-o");
+    plt::xticks(xticks, xtick_labels);
 
     plt::subplot(2,1,2);
-    plt::title("Humedad (%)");
-    plt::plot(x, hums, "b-");
+    plt::title("Humedad por hora (%)");
+    plt::plot(x, hums, "b-o");
+    plt::xticks(xticks, xtick_labels);
 
-    // Mostrar solo algunas fechas en eje X para que no se amontonen
-    std::vector<std::string> xticks;
-    std::vector<int> xtick_positions;
-    int step = std::max(1, static_cast<int>(fechas.size()/10)); // máximo 10 etiquetas
-    for (size_t i = 0; i < fechas.size(); i += step) {
-        // Mostrar solo HH:MM
-        xticks.push_back(fechas[i].substr(11, 5));
-        xtick_positions.push_back(i+1);
+    plt::tight_layout();
+    plt::show();
+}
+
+void graficarOrdenadas(const std::vector<double>& temps,
+                       const std::vector<double>& hums,
+                       const std::vector<std::string>& fechas) {
+    std::vector<int> x(temps.size());
+    for (size_t i = 0; i < x.size(); i++) x[i] = i+1;
+
+    std::vector<std::string> horas;
+    for (const auto& f : fechas) {
+        horas.push_back(f.substr(11,5));
     }
-    plt::xticks(xtick_positions, xticks);
+
+    std::vector<std::pair<double,std::string>> tempsOrd;
+    std::vector<std::pair<double,std::string>> humsOrd;
+    for (size_t i = 0; i < temps.size(); i++) tempsOrd.push_back({temps[i], horas[i]});
+    for (size_t i = 0; i < hums.size(); i++) humsOrd.push_back({hums[i], horas[i]});
+
+    std::sort(tempsOrd.begin(), tempsOrd.end());
+    std::sort(humsOrd.begin(), humsOrd.end());
+
+    // --- Graficar ---
+    plt::figure();
+
+    // --- Temperaturas ordenadas ---
+    plt::subplot(2,1,1);
+    plt::title("Temperaturas ordenadas");
+    std::vector<double> yT, xT;
+    std::vector<std::string> xtick_labels_T;
+    for (size_t i = 0; i < tempsOrd.size(); i++) {
+        xT.push_back(i+1);
+        yT.push_back(tempsOrd[i].first);
+        xtick_labels_T.push_back(tempsOrd[i].second);
+    }
+    plt::plot(xT, yT, "r-");
+
+    // xticks espaciados para horas
+    std::vector<int> xticksT;
+    std::vector<std::string> xticksLabelT;
+    int stepT = std::max(1, (int)xT.size()/8);
+    for (size_t i = 0; i < xT.size(); i+=stepT) {
+        xticksT.push_back(xT[i]);
+        xticksLabelT.push_back(xtick_labels_T[i]);
+    }
+    plt::xticks(xticksT, xticksLabelT);
+
+    // --- Humedades ordenadas ---
+    plt::subplot(2,1,2);
+    plt::title("Humedades ordenadas");
+    std::vector<double> yH, xH;
+    std::vector<std::string> xtick_labels_H;
+    for (size_t i = 0; i < humsOrd.size(); i++) {
+        xH.push_back(i+1);
+        yH.push_back(humsOrd[i].first);
+        xtick_labels_H.push_back(humsOrd[i].second);
+    }
+    plt::plot(xH, yH, "b-");
+
+    // xticks espaciados para horas
+    std::vector<int> xticksH;
+    std::vector<std::string> xticksLabelH;
+    int stepH = std::max(1, (int)xH.size()/8);
+    for (size_t i = 0; i < xH.size(); i+=stepH) {
+        xticksH.push_back(xH[i]);
+        xticksLabelH.push_back(xtick_labels_H[i]);
+    }
+    plt::xticks(xticksH, xticksLabelH);
 
     plt::tight_layout();
     plt::show();
 }
 
 int main() {
-    std::unique_ptr<Sensor> tempSensor = std::make_unique<SensorTemperatura>("T1");
-    std::unique_ptr<Sensor> humSensor  = std::make_unique<SensorHumedad>("H1");
-
     std::vector<double> temperaturas;
     std::vector<double> humedades;
     std::vector<std::string> fechas;
 
-    const int N = 30; // número de nuevas lecturas
-
-    // ===== Leer CSV previo =====
-    if (leerCSV("datos.csv", temperaturas, humedades, fechas)) {
-        std::cout << "Se cargaron " << temperaturas.size() << " lecturas previas desde datos.csv" << std::endl;
+    if (!leerCSV("datos.csv", temperaturas, humedades, fechas)) {
+        std::cerr << "Error: no se pudo abrir datos.csv\n";
+        return 1;
     }
 
-    // ===== Simular nuevas lecturas cada hora =====
-    std::chrono::system_clock::time_point lastTime;
-    if (fechas.empty()) {
-        lastTime = std::chrono::system_clock::now();
-    } else {
-        // Tomar la última fecha del CSV y convertir a time_point
-        std::tm tm = {};
-        std::istringstream ss(fechas.back());
-        ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-        lastTime = std::chrono::system_clock::from_time_t(std::mktime(&tm));
-    }
-
-    
-    for (int i = 0; i < N; i++) {
-        temperaturas.push_back(tempSensor->leer());
-        humedades.push_back(humSensor->leer());
-        lastTime += std::chrono::hours(1); // incrementar 1 hora
-        fechas.push_back(formatTime(lastTime));
-    }
-
-    // ===== Ordenar temperaturas (ejemplo) =====
-    std::vector<double> tempsOrdenadas = temperaturas;
-    std::sort(tempsOrdenadas.begin(), tempsOrdenadas.end());
-
-    // ===== Guardar CSV =====
-    guardarCSV("datos.csv", temperaturas, humedades, fechas);
-
-    // ===== Graficar =====
-    graficar(temperaturas, humedades, fechas);
-
-    std::cout << "Temperaturas ordenadas: ";
-    for (auto t : tempsOrdenadas) std::cout << t << " ";
-    std::cout << std::endl;
+    graficarPorHora(temperaturas, humedades, fechas);
+    graficarOrdenadas(temperaturas, humedades, fechas);
 
     return 0;
 }

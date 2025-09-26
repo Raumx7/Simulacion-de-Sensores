@@ -1,4 +1,4 @@
-# Proyecto: Nombre de tu proyecto
+# Proyecto: Simulación de Sensores
 Escribe aquí un overview general de tu proyecto
 
 ## Descripción del avance 1

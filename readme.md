@@ -12,10 +12,10 @@ En este avance se implementó:
 
 Lectura de datos desde un archivo CSV con registros de sensores.
 Representación gráfica de los datos con la librería matplotlibcpp.
-Ordenamiento de datos (temperatura y humedad) para análisis de mínimos y máximos.
+Ordenamiento de datos (temperatura y humedad) para análisis de mínimos y máximos usando std::sort.
 Búsqueda eficiente de temperaturas en un horario específico usando std::binary_search.
 
-Este avance muestra cómo la correcta selección de algoritmos mejora el desempeño en programas que requieren procesar datos de sensores de forma rápida y confiable.
+Este avance muestra cómo el uso de algoritmos eficientes mejora el desempeño en programas que requieren procesar datos de sensores de forma rápida y confiable.
 
 ## Instrucciones para compilar el avance de proyecto
 Ejecuta el siguiente comando en la terminal:
@@ -29,16 +29,18 @@ Ejecuta el siguiente comando en la terminal:
 
 ## Descripción de las entradas del avance de proyecto
 Archivo de entrada: datos.csv que contiene los registros de cada sensor con el siguiente formato:
-
-timestamp,temperatura,humedad
-2024-09-01 08:00:00,25.3,60.1
-2024-09-01 09:00:00,26.7,58.4
-2024-09-01 10:00:00,27.5,57.9
+```
+Lectura,Fecha,Temperatura,Humedad  
+1,2025-09-25 00:00:00,22.1,55.2  
+2,2025-09-25 01:00:00,21.8,56.0  
+3,2025-09-25 02:00:00,21.5,57.1  
+4,2025-09-25 03:00:00,21.3,58.0  
 ...
-
-timestamp: fecha y hora (AAAA-MM-DD HH:MM:SS).
-temperatura: valor en °C.
-humedad: valor en %.
+```
+- Lectura: número de lectura.  
+- Fecha: fecha y hora (AAAA-MM-DD HH:MM:SS).  
+- Temperatura: valor en °C.  
+- Humedad: valor en %.  
 
 ## Descripción de las salidas del avance de proyecto
 Escribe aquí la descripción de los resultados de la ejecución de tu programa.

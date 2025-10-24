@@ -18,9 +18,20 @@ En este avance se implementó:
 
 Este avance muestra cómo el uso de algoritmos eficientes mejora el desempeño en programas que requieren procesar datos de sensores de forma rápida y confiable.
 
+## Descripción del avance 2
+Se implementó una modificación en el sistema de sensores reemplazando los vectores originales por listas doblemente enlazadas (std::list) para el almacenamiento de lecturas y timestamps, manteniendo toda la funcionalidad existente. Esta transformación convierte la estructura de datos lineal en una no lineal, ofreciendo inserción y eliminación en tiempo constante O(1) en cualquier posición, eliminación de necesidad de realocación de memoria, y estabilidad de iteradores. Para garantizar compatibilidad con las librerías de graficado y algoritmos STL, se implementaron métodos de conversión eficientes que transforman las listas a vectores cuando es necesario, permitiendo que todas las operaciones de ordenamiento, búsqueda binaria y visualización funcionen sin modificaciones en el código cliente. El sistema ahora combina la eficiencia de inserción de las listas con la potencia de acceso aleatorio de los vectores cuando se requiere.
+
+## Cambios sobre el primer avance
+
+1. Reemplacé std::vector por std::list en la clase Sensor para las lecturas y timestamps.
+2. Mantuve métodos de conversión getLecturas() y getTimestamps() que convierten las listas a vectores para compatibilidad con librería de gráficos.
+3. Implementé algoritmos con iteradores para trabajar eficientemente con las listas.
+4. Modifiqué getTimestampMaximo() y getTimestampMinimo() para usar iteradores en lugar de índices.
+5. El archivo main.cpp se adaptó para usar las conversiones a vector cuando es necesario para matplotlib.
+
 ## Instrucciones para compilar el avance de proyecto  
 
-Este proyecto utiliza **C++17**, la librería [matplotlibcpp](https://github.com/lava/matplotlib-cpp) para graficar y requiere tener instalado **Python** con **NumPy**.  
+Este proyecto utiliza **C++17**, la librería [matplotlibcpp](https://github.com/lava/matplotlib-cpp) para graficar y requiere tener instalado **Python** con **NumPy**.
 
 ### Dependencias necesarias  
 
@@ -82,12 +93,14 @@ g++ *.cpp -std=c++17 ^
 -IC:\Users\TuUsuario\AppData\Local\Programs\Python\Python311\Lib\site-packages\numpy\core\include ^
 -LC:\Users\TuUsuario\AppData\Local\Programs\Python\Python311\libs ^
 -lpython311 ^
--o primer_avance.exe
+-o segundo_avance.exe
 ```
 Ejecutar el programa:
 ```
-./primer_avance.exe
+./segundo_avance.exe
 ```
+## Enlace al video del segundo avance
+[Segundo avance](https://youtu.be/M7sS9IyE3Gg)
 
 ## Descripción de las entradas del avance de proyecto
 - **Archivo de entrada**  
@@ -131,15 +144,131 @@ Ingrese la hora a buscar (HH:MM):
 -Resultados de búsquedas específicas por hora.
 
 ## Desarrollo de competencias
-En este primer avance se emplea std::sort para ordenar vectores de datos de sensores.
-- std::sort está implementado con Introsort, una combinación de **Quicksort**, **Heapsort** y **Insertion sort.**
-- Su complejidad promedio es **O(n log n)**, mientras que en el peor caso está garantizado un **O(n log n)** gracias a la caída a **Heapsort.**
 
-Esto significa que ordenar incluso grandes volúmenes de lecturas (miles de registros de sensores) sigue siendo computacionalmente eficiente.
-Por otro lado, se usa std::binary_search para buscar un horario específico:
+### SICT0301: Evalúa los componentes
+#### Hace un análisis de complejidad correcto y completo para los algoritmos de ordenamiento usados en el programa.
+En este avance he desarrollado un análisis de complejidad más completo para todos los algoritmos de ordenamiento utilizados en el programa. Mi aprendizaje se evidencia en el análisis que incluye no solo la complejidad promedio, sino también los casos mejor y peor para cada algoritmo STL utilizado:
 
-- Este algoritmo requiere que el vector esté ordenado previamente.
-- Tiene complejidad **O(log n)**, ya que divide repetidamente el rango de búsqueda a la mitad.
+#### Análisis de std::sort():
 
-Así que, en el programa el **ordenamiento** asegura que los datos de temperatura estén organizados cronológicamente o por magnitud, mientras que la **búsqueda binaria** permite al usuario encontrar de manera eficiente la temperatura en una hora específica sin recorrer toda la estructura.
+Complejidad mejor caso: O(n log n) en implementaciones estándar, aunque algunas optimizaciones pueden lograr O(n) para datos casi ordenados
+Complejidad peor caso: O(n log n) garantizado gracias al uso de Introsort que combina Quicksort, Heapsort e Insertion Sort
+Complejidad promedio: O(n log n)
 
+Se utiliza en graficarOrdenadas() para ordenar temperaturas y humedades, y en buscarTemperaturaPorHora() para ordenar por hora
+
+#### Análisis de std::binary_search():
+
+Complejidad mejor caso: O(1) cuando el elemento está en la posición media
+Complejidad peor caso: O(log n) cuando busca en todo el rango
+Complejidad promedio: O(log n)
+Requiere datos previamente ordenados con std::sort()
+
+#### Análisis de std::lower_bound():
+
+Complejidad mejor caso: O(1)  
+Complejidad peor caso: O(log n)  
+Complejidad promedio: O(log n)  
+
+Utilizado para encontrar la posición exacta después de binary_search
+
+#### Análisis de std::find():
+
+Complejidad mejor caso: O(1) - elemento en primera posición
+Complejidad peor caso: O(n) - elemento en última posición o no existe
+Complejidad promedio: O(n)
+
+Usado en graficarOrdenadas() para localizar posiciones de valores extremos.
+
+#### Hace un análisis de complejidad correcto y completo de todas las estructuras de datos y cada uno de sus usos en el programa.
+He desarrollado esta competencia mediante un análisis de la estructura de datos std::list implementada y su comparación con la anterior implementación con std::vector. En la clase Sensor se demuestra este análisis al documentar las complejidades de todas las operaciones:
+
+#### Operaciones con std::list (implementación actual):
+
+push_back(): O(1) para inserción de nuevas lecturas  
+size(): O(1) para obtener número de lecturas  
+Iteración completa: O(n) para cálculos de máximo, mínimo y promedio  
+Acceso por posición: O(n) mediante iteradores secuenciales  
+std::max_element() y std::min_element(): O(n) para encontrar valores extremos
+
+#### Operaciones con std::vector (implementación anterior):
+
+push_back(): O(1) amortizado, pero O(n) en realocaciones
+Acceso por índice: O(1) para acceso aleatorio
+Inserción en medio: O(n) por desplazamiento de elementos
+
+### SICT0302: Toma decisiones
+#### Selecciona un algoritmo de ordenamiento adecuado al problema y lo usa correctamente.
+He reforzado mi competencia en selección algorítmica mediante la justificación específica de cada uso de algoritmos STL en el contexto del problema de sensores, considerando sus complejidades computacionales:
+
+#### En graficarOrdenadas():
+
+Seleccioné std::sort (O(n log n)) porque necesitamos ordenar completamente los datos para visualizar las tendencias, aceptando esta complejidad dado que n (número de lecturas) es manejable (typicalmente 24-48 lecturas por día) y la operación no es en tiempo real.
+
+Usé std::find (O(n)) para localizar posiciones de valores extremos en los vectores ordenados, ya que n es pequeño después del filtrado para gráficas.
+
+En buscarTemperaturaPorHora():
+
+Implementé std::sort (O(n log n)) seguido de std::binary_search (O(log n)) porque el costo de ordenamiento una vez se justifica por las múltiples búsquedas rápidas posteriores.
+
+La combinación sort + binary_search es óptima para consultas repetitivas sobre los mismos datos.
+
+#### En la clase Sensor:
+
+Utilicé std::max_element y std::min_element (O(n)) para cálculos estadísticos porque son simples y n es típicamente pequeño.
+
+Para el cálculo de promedio implementé un loop manual O(n) que es igualmente eficiente.
+
+#### Selecciona una estructura de datos adecuada al problema y la usa correctamente.
+He desarrollado esta competencia mediante la selección fundamentada de std::list sobre std::vector para el almacenamiento de lecturas de sensores, basándome en el análisis detallado de complejidades:
+
+#### Decisiones de estructura de datos:
+
+Selección de std::list para almacenamiento principal: Por su O(1) en inserciones push_back(), crucial para un sistema que recibe lecturas continuamente de sensores sin preocuparse por realocaciones.
+Uso de std::vector para algoritmos y gráficos: Mediante conversiones O(n) cuando se necesita acceso aleatorio O(1) para algoritmos STL y librerías de plotting.
+Mantenimiento de std::vector para gestión de sensores: En SistemaSensores porque el número de sensores es pequeño y fijo, no requiere inserciones frecuentes.
+
+#### Análisis de compensaciones:
+
+Ventaja de std::list: Inserción O(1) constante vs O(1) amortizado de std::vector con posibles realocaciones O(n)
+Desventaja compensada: Acceso O(n) vs O(1) de vectores, pero mitigado por conversiones estratégicas a vector cuando se necesita acceso aleatorio
+Beneficio adicional: Estabilidad de iteradores durante inserciones
+
+### SICT0303: Implementa acciones científicas
+#### Implementa mecanismos para consultar información de las estructras correctos.
+He implementado múltiples mecanismos robustos para consultar información de las estructuras de datos, optimizando según las complejidades algorítmicas:
+
+#### Consultas estadísticas O(n):
+
+getMaximo() y getMinimo() usando std::max_element y std::min_element sobre std::list
+getPromedio() con iteración manual sobre la lista
+getTimestampMaximo() y getTimestampMinimo() que correlacionan datos entre dos listas usando iteradores sincronizados
+
+#### Consultas de búsqueda O(log n):
+
+En buscarTemperaturaPorHora() implementé std::binary_search sobre datos ordenados por hora  
+Uso de std::lower_bound para ubicación precisa después de la búsqueda  
+
+#### Consultas de conversión O(n):
+
+getLecturas() y getTimestamps() que convierten std::list a std::vector para compatibilidad  
+Estas conversiones permiten usar algoritmos STL que requieren acceso aleatorio
+
+#### Implementa mecanismos de lectura de archivos para cargar datos a las estructuras de manera correcta.
+He implementado un mecanismo de lectura de archivos CSV robusto y eficiente en el método cargarDesdeCSV() de la clase SistemaSensores, con análisis de complejidad:
+
+#### Complejidad del proceso de carga:
+
+Apertura de archivo: O(1)  
+Lectura de encabezado: O(1)  
+Procesamiento de cada línea: O(n) donde n es el número de registros  
+Parseo por línea: O(m) donde m es la longitud de la línea, usando std::string::find() y std::string::substr()  
+Inserción de datos: O(1) por lectura gracias al uso de std::list::push_back()  
+
+#### Mecanismos implementados:
+
+Manejo de errores: Verificación de apertura correcta del archivo  
+Parseo robusto: Uso de std::string::find() para localizar delimitadores CSV  
+Conversión segura: std::stod() para conversión de strings a números  
+Carga eficiente: Inserción O(1) en las listas de sensores  
+Gestión de memoria: Procesamiento línea por línea sin cargar todo el archivo en memoria

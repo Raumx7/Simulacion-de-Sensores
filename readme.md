@@ -151,11 +151,35 @@ En este avance he desarrollado un análisis de complejidad más completo para to
 
 #### Análisis de std::sort():
 
-Complejidad mejor caso: O(n log n) en implementaciones estándar, aunque algunas optimizaciones pueden lograr O(n) para datos casi ordenados
-Complejidad peor caso: O(n log n) garantizado gracias al uso de Introsort que combina Quicksort, Heapsort e Insertion Sort
-Complejidad promedio: O(n log n)
+Según la referencia de [cppreference](https://en.cppreference.com/w/cpp/algorithm/sort.html) la implementación típica de std::sort() utiliza Introsort, que es una combinación de:
 
-Se utiliza en graficarOrdenadas() para ordenar temperaturas y humedades, y en buscarTemperaturaPorHora() para ordenar por hora
+1. Quicksort (como algoritmo principal)
+2. Heapsort (para evitar el peor caso de Quicksort)
+3. Insertion sort (para arreglos pequeños)
+
+#### Quick sort
+
+Mejor caso O(n log n)  
+Caso promedio O(n log n)  
+Peor caso O(n²)
+
+#### Heap sort
+
+Mejor caso O(n log n)  
+Caso promedio O(n log n)  
+Peor caso O(n log n)
+
+#### Insertion sort
+
+Mejor caso O(n) (si ya está casi ordenado)  
+Caso promedio O(n²)  
+Peor caso O(n²)
+
+Entonces, la complejidad final de std::sort() que usa Introsort para el mejor caso es O(n) a O(n log n) si el arreglo es pequeño o casi ordenado (usaría insertion o quick sort ). En cambio, para el caso promedio y peor caso se trata de una complejidad de O(n log n) ya que se usaría quick o heap sort.
+
+![Introsort](Imagenes/IntroSort.png)
+
+En el programa se utiliza en graficarOrdenadas() para ordenar temperaturas y humedades, y en buscarTemperaturaPorHora() para ordenar por hora.
 
 #### Análisis de std::binary_search():
 

@@ -104,10 +104,52 @@ void graficarPorHora(SistemaSensores& sistema) {
 }
 
 /**
- * FUNCIÓN: graficarOrdenadas
- * PROPÓSITO: Genera gráficas de temperatura y humedad ordenadas por valor usando listas
- * COMPLEJIDAD: O(n log n) - Dominada por std::sort
+ * FUNCIÓN: guardarDatosOrdenadosCSV
+ * PROPÓSITO: Guarda los datos ordenados de temperatura y humedad en archivos CSV
+ * COMPLEJIDAD: O(n) donde n = número de lecturas
  */
+void guardarDatosOrdenadosCSV(const std::vector<std::pair<double, std::string>>& tempsOrd,
+                             const std::vector<std::pair<double, std::string>>& humsOrd) {
+    // Guardar temperaturas ordenadas en temps.csv
+    std::ofstream archivoTemps("temps.csv");
+    if (archivoTemps.is_open()) {
+        archivoTemps << "Temperatura,Hora\n";
+        for (const auto& temp : tempsOrd) {
+            archivoTemps << std::fixed << std::setprecision(2) << temp.first << ","
+                        << temp.second << "\n";
+        }
+        archivoTemps.close();
+        std::cout << "Datos de temperaturas ordenadas guardados en temps.csv" << std::endl;
+    } else {
+        std::cerr << "Error: No se pudo abrir temps.csv para escritura" << std::endl;
+    }
+    
+    // Guardar humedades ordenadas en hums.csv
+    std::ofstream archivoHums("hums.csv");
+    if (archivoHums.is_open()) {
+        archivoHums << "Humedad,Hora\n";
+        for (const auto& hum : humsOrd) {
+            archivoHums << std::fixed << std::setprecision(2) << hum.first << ","
+                       << hum.second << "\n";
+        }
+        archivoHums.close();
+        std::cout << "Datos de humedades ordenadas guardados en hums.csv" << std::endl;
+    } else {
+        std::cerr << "Error: No se pudo abrir hums.csv para escritura" << std::endl;
+    }
+}
+
+/**
+ * FUNCIÓN: graficarOrdenadas
+ * PROPÓSITO: Genera gráficas de temperatura y humedad ordenadas por valor
+ * COMPLEJIDAD: O(n log n) - Dominada por std::sort
+ * 
+ * std::sort usa Introsort, un algoritmo híbrido que combina Quicksort, Heapsort e Insertion Sort.
+ * - Mejor caso: O(n log n)
+ * - Peor caso: O(n log n) - Gracias al cambio a Heapsort cuando la profundidad de recursión es alta.
+ * - Caso promedio: O(n log n)
+ */
+
 void graficarOrdenadas(SistemaSensores& sistema) {
     SensorTemperatura* sensorTemp = dynamic_cast<SensorTemperatura*>(sistema.buscarSensor("TEMP_001"));
     SensorHumedad* sensorHum = dynamic_cast<SensorHumedad*>(sistema.buscarSensor("HUM_001"));
@@ -139,9 +181,12 @@ void graficarOrdenadas(SistemaSensores& sistema) {
         humsOrd.push_back({hums[i], horas[i]});
     }
 
-    // Ordenamiento
+    // Ordenamiento - O(n log n)
     std::sort(tempsOrd.begin(), tempsOrd.end());
     std::sort(humsOrd.begin(), humsOrd.end());
+
+    // Guardar datos ordenados en archivos CSV - O(n)
+    guardarDatosOrdenadosCSV(tempsOrd, humsOrd);
 
     // Obtener valores extremos
     double tempMin = sensorTemp->getMinimo();
@@ -171,7 +216,7 @@ void graficarOrdenadas(SistemaSensores& sistema) {
     }
     plt::plot(xT, yT, "r-");
 
-    // Buscar posiciones de mínimos/máximos en vector ordenado
+    // Buscar posiciones de mínimos/máximos en vector ordenado - O(n)
     auto minTempIt = std::find(yT.begin(), yT.end(), tempMin);
     auto maxTempIt = std::find(yT.begin(), yT.end(), tempMax);
     
@@ -193,7 +238,7 @@ void graficarOrdenadas(SistemaSensores& sistema) {
         plt::text(xT[maxIndex] - 0.8, tempMax - tempRango * 0.30, ss.str());
     }
 
-    // Configurar ejes con muestreo
+    // Configurar ejes con muestreo - O(n)
     std::vector<int> xticksT;
     std::vector<std::string> xticksLabelT;
     int stepT = std::max(1, (int)xT.size()/8);
@@ -241,7 +286,7 @@ void graficarOrdenadas(SistemaSensores& sistema) {
         plt::text(xH[maxIndex] - 0.8, humMax - humRango * 0.30, ss.str());
     }
 
-    // Configurar ejes
+    // Configurar ejes - O(n)
     std::vector<int> xticksH;
     std::vector<std::string> xticksLabelH;
     int stepH = std::max(1, (int)xH.size()/8);
@@ -297,7 +342,7 @@ void buscarTemperaturaPorHora(SistemaSensores& sistema) {
         horaTemp.push_back({hora, lecturas[i]});
     }
     
-    // Ordenar por hora para habilitar búsqueda binaria
+    // Ordenar por hora para habilitar búsqueda binaria - O(n log n)
     std::sort(horaTemp.begin(), horaTemp.end(),
               [](const auto& a, const auto& b) {
                   return a.first < b.first;
@@ -307,7 +352,7 @@ void buscarTemperaturaPorHora(SistemaSensores& sistema) {
     std::cout << "Sensor: " << sensorTemp->getId() << " - " << sensorTemp->getTipo() << std::endl;
     std::cout << "Horas disponibles (formato HH:MM):" << std::endl;
     
-    // Mostrar horas disponibles (con muestreo implícito de 3 en 3)
+    // Mostrar horas disponibles (con muestreo implícito de 3 en 3) - O(n)
     for (size_t i = 0; i < horaTemp.size(); i += 3) {
         std::cout << horaTemp[i].first;
         if (i + 1 < horaTemp.size()) std::cout << ", " << horaTemp[i+1].first;
@@ -325,7 +370,7 @@ void buscarTemperaturaPorHora(SistemaSensores& sistema) {
         return;
     }
     
-    // Búsqueda binaria
+    // Búsqueda binaria - O(log n)
     bool encontrada = std::binary_search(horaTemp.begin(), horaTemp.end(),
                                         std::make_pair(horaBuscada, 0.0),
                                         [](const auto& a, const auto& b) {
@@ -333,7 +378,7 @@ void buscarTemperaturaPorHora(SistemaSensores& sistema) {
                                         });
     
     if (encontrada) {
-        // Encontrar posición exacta
+        // Encontrar posición exacta - O(log n)
         auto it = std::lower_bound(horaTemp.begin(), horaTemp.end(),
                                   std::make_pair(horaBuscada, 0.0),
                                   [](const auto& a, const auto& b) {
@@ -367,7 +412,7 @@ int main() {
     
     sistema.mostrarTodosLosSensores();
     graficarPorHora(sistema);
-    graficarOrdenadas(sistema);
+    graficarOrdenadas(sistema);  // Esta función ahora genera los archivos CSV
     buscarTemperaturaPorHora(sistema);
     sistema.mostrarTodosLosSensores();
 

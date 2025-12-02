@@ -170,7 +170,9 @@ Humedad,Hora
 
 ### SICT0301: Evalúa los componentes
 #### Hace un análisis de complejidad correcto y completo para los algoritmos de ordenamiento usados en el programa.
-En este avance he desarrollado un análisis de complejidad más completo para todos los algoritmos de ordenamiento utilizados en el programa. Mi aprendizaje se evidencia en el análisis que incluye no solo la complejidad promedio, sino también los casos mejor y peor para cada algoritmo STL utilizado:
+### SICT0301: Evalúa los componentes
+#### Hace un análisis de complejidad correcto y completo para los algoritmos de ordenamiento usados en el programa.
+He desarrollado esta competencia al realizar un análisis de complejidad para cada componente del programa, incluyendo un análisis detallado del algoritmo de ordenamiento std::sort (Introsort) utilizado en las funciones graficarOrdenadas() y buscarTemperaturaPorHora().
 
 #### Análisis de std::sort():
 
@@ -198,11 +200,26 @@ Mejor caso O(n) (si ya está casi ordenado)
 Caso promedio O(n²)  
 Peor caso O(n²)
 
-Entonces, la complejidad final de std::sort() que usa Introsort para el mejor caso es O(n) a O(n log n) si el arreglo es pequeño o casi ordenado (usaría insertion o quick sort ). En cambio, para el caso promedio y peor caso se trata de una complejidad de O(n log n) ya que se usaría quick o heap sort.
+Entonces, la complejidad final de std::sort() que usa Introsort para el mejor caso es O(n) si el arreglo es pequeño (n <= 16) y si el arreglo es grande (n > 16) sería O(n log n). En cambio, para el caso promedio y peor caso se trata de una complejidad de O(n²) si el arreglo es pequeño (n <= 16) ya que se usaría insertion-sort, en cambio para arreglos más grandes (n > 16) tendría O(n log n) porque se usaría Quick o Heap sort.
 
-![Introsort](Imagenes/IntroSort.png)
+![Introsort](Imagenes/intro-sort.png)
 
-En el programa se utiliza en graficarOrdenadas() para ordenar temperaturas y humedades, y en buscarTemperaturaPorHora() para ordenar por hora.
+Para el programa:
+
+Número de elementos (n): El sistema carga datos de sensores típicamente con 24 lecturas (una por hora), por lo que n = 24.
+Cálculo de maxdepth: Para n = 24, maxdepth = ⌊log₂(24)⌋ × 2 ≈ 4 × 2 = 8.
+
+Flujo de ejecución:
+n = 24 > 16, por lo que no usa Insertion Sort directamente.
+Se inicia con Quicksort recursivo, disminuyendo maxdepth en cada nivel.
+Si maxdepth llega a 0 (después de 8 niveles recursivos), cambia a Heapsort.
+Esto garantiza que el peor caso sea O(n log n).
+
+Complejidad final de std::sort en el programa:
+
+Mejor caso: O(n log n) - Datos parcialmente ordenados que permiten particiones balanceadas.  
+Caso promedio: O(n log n) - Comportamiento típico de Quicksort.  
+Peor caso: O(n log n) - Cuando se activa Heapsort al alcanzar maxdepth = 0.  
 
 #### Análisis de std::binary_search():
 
@@ -221,8 +238,8 @@ Utilizado para encontrar la posición exacta después de binary_search
 
 #### Análisis de std::find():
 
-Complejidad mejor caso: O(1) - elemento en primera posición
-Complejidad peor caso: O(n) - elemento en última posición o no existe
+Complejidad mejor caso: O(1) - elemento en primera posición  
+Complejidad peor caso: O(n) - elemento en última posición o no existe  
 Complejidad promedio: O(n)
 
 Usado en graficarOrdenadas() para localizar posiciones de valores extremos.
